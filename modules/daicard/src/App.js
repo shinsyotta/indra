@@ -1,5 +1,6 @@
 import * as connext from "@connext/client";
 import { ConnextStore, PisaClientBackupAPI } from "@connext/store";
+import { HDNode } from "ethers/utils";
 import {
   CF_PATH,
   ConnextClientStorePrefix,
@@ -147,6 +148,11 @@ class App extends React.Component {
     this.parseQRCode.bind(this);
     this.setWalletConnext.bind(this);
     this.getWalletConnext.bind(this);
+
+	// Get in order to fund(collaterize) the address with the custom mnemonic
+	let INDRA_ETH_MNEMONIC = "put your mnemonic or get from env..."
+	const signingAddress = HDNode.fromMnemonic(INDRA_ETH_MNEMONIC).derivePath(CF_PATH).derivePath("0").address;
+	console.log(">>> signingAddress: ", signingAddress)
   }
 
   // ************************************************* //

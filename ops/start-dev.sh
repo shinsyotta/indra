@@ -33,7 +33,8 @@ if [[ -f address-book.json ]]
 then eth_contract_addresses="`cat address-book.json | tr -d ' \n\r'`"
 else eth_contract_addresses="`cat modules/contracts/address-book.json | tr -d ' \n\r'`"
 fi
-eth_mnemonic="candy maple cake sugar pudding cream honey rich smooth crumble sweet treat"
+eth_mnemonic="put your mnemonic or get from env..."
+#eth_mnemonic="candy maple cake sugar pudding cream honey rich smooth crumble sweet treat"
 
 if [[ "$INDRA_ETH_PROVIDER" == "$localProvider" ]]
 then chainId="$ganacheId"
