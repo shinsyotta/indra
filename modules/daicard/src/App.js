@@ -1,5 +1,6 @@
 import * as connext from "@connext/client";
 import { ConnextStore, PisaClientBackupAPI } from "@connext/store";
+import { HDNode } from "ethers/utils";
 import {
   CF_PATH,
   ConnextClientStorePrefix,
@@ -146,6 +147,11 @@ class App extends React.Component {
     this.parseQRCode.bind(this);
     this.setWalletConnext.bind(this);
     this.getWalletConnext.bind(this);
+
+	// Get in order to fund(collaterize) the address with the custom mnemonic
+	let INDRA_ETH_MNEMONIC = "....."
+	const signingAddress = HDNode.fromMnemonic(INDRA_ETH_MNEMONIC).derivePath(CF_PATH).derivePath("0").address;
+	console.log(">>> signingAddress: ", signingAddress)
   }
 
   // ************************************************* //
@@ -357,6 +363,27 @@ class App extends React.Component {
     return mySaiBalance;
   };
 
+
+  //request deposit rights
+  requestDepositRights = async param =>  {
+	console.log(">>> requestDepositRights called")
+	const { channel } = this.state;
+	let assetId = channel.config.contractAddresses.Token
+	console.log(">>> requestDepositRights assetId", assetId)
+	const requestRes = await channel.requestDepositRights({ assetId });
+	console.log(">>> requestDepositRights res: ", requestRes)
+  }
+
+  //rescind deposit rights
+  rescindDepositRights = async param =>  {
+	console.log(">>> rescindDepositRights called")
+	const { channel } = this.state;
+	let assetId = channel.config.contractAddresses.Token
+	console.log(">>> rescindDepositRights assetId", assetId)
+	const rescindRes = await channel.rescindDepositRights({ assetId });
+	console.log(">>> rescindDepositRights res: ", rescindRes)
+  }
+
   // ************************************************* //
   //                    Pollers                        //
   // ************************************************* //
@@ -468,6 +495,7 @@ class App extends React.Component {
     }
     if (balance.onChain.ether.wad.eq(Zero)) {
       console.debug(`No on-chain eth to deposit`);
+	  console.log(`Log: No on-chain eth to deposit`);
       return;
     }
 
@@ -545,6 +573,7 @@ class App extends React.Component {
     }
     if (balance.channel.ether.wad.eq(Zero)) {
       console.debug(`No in-channel eth available to swap`);
+	  console.log(`Log: No in-channel eth available to swap`);
       return;
     }
     if (balance.channel.token.wad.gte(maxDeposit.toDAI(swapRate).wad)) {
@@ -778,6 +807,35 @@ class App extends React.Component {
             />
             <Route path="/support" render={props => <SupportCard {...props} channel={channel} />} />
             <Confirmations machine={machine} network={network} state={state} />
+			<Button
+				disableTouchRipple
+				className={classes.button}
+				disabled={ false }
+				fullWidth
+				onClick={() => {
+					this.requestDepositRights();
+				}}
+				size="large"
+				variant="contained"
+				>
+				{ `Request Deposit Rights (Lock)`}
+			</Button>
+			<br/>
+			<br/>
+			<br/>
+			<Button
+				disableTouchRipple
+				className={classes.button}
+				disabled={ false }
+				fullWidth
+				onClick={() => {
+					this.rescindDepositRights();
+				}}
+				size="large"
+				variant="contained"
+				>
+				{ `Rescind Deposit Rights (Unlock)`}
+			</Button>
           </Paper>
         </Grid>
       </Router>
