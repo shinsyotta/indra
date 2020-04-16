@@ -335,7 +335,11 @@ class App extends React.Component {
 	const { channel } = this.state;
 	let assetId = channel.config.contractAddresses.Token
 	console.log(">>> requestDepositRights assetId", assetId)
-	const requestRes = await channel.requestDepositRights({ AddressZero });
+	// to deposit ERC-20
+	const requestRes = await channel.requestDepositRights({ assetId });
+
+	// to deposit ETH
+	//const requestRes = await channel.requestDepositRights({ AddressZero });
 	console.log(">>> requestDepositRights res: ", requestRes)
   }
 
@@ -345,7 +349,11 @@ class App extends React.Component {
 	const { channel } = this.state;
 	let assetId = channel.config.contractAddresses.Token
 	console.log(">>> rescindDepositRights assetId", assetId)
-	const rescindRes = await channel.rescindDepositRights({ AddressZero });
+	// to deposit ERC-20
+	const rescindRes = await channel.rescindDepositRights({ assetId });
+
+	// to deposit ETH
+	//const rescindRes = await channel.rescindDepositRights({ AddressZero });
 	console.log(">>> rescindDepositRights res: ", rescindRes)
   }
   // ************************************************* //
