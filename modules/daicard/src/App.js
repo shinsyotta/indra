@@ -3,7 +3,7 @@ import { ConnextStore, PisaClientBackupAPI } from "@connext/store";
 import { ConnextClientStorePrefix, EventNames, StoreTypes } from "@connext/types";
 import { Currency, minBN, toBN, tokenToWei, weiToToken } from "@connext/utils";
 import WalletConnectChannelProvider from "@walletconnect/channel-provider";
-import { Paper, withStyles, Grid } from "@material-ui/core";
+import { Paper, withStyles, Grid, Button } from "@material-ui/core";
 import { Contract, ethers as eth } from "ethers";
 import { AddressZero, Zero } from "ethers/constants";
 import { formatEther } from "ethers/utils";
@@ -329,6 +329,25 @@ class App extends React.Component {
     return mySaiBalance;
   };
 
+
+  requestDepositRights = async param =>  {
+	console.log(">>> requestDepositRights called")
+	const { channel } = this.state;
+	let assetId = channel.config.contractAddresses.Token
+	console.log(">>> requestDepositRights assetId", assetId)
+	const requestRes = await channel.requestDepositRights({ AddressZero });
+	console.log(">>> requestDepositRights res: ", requestRes)
+  }
+
+  //rescind deposit rights
+  rescindDepositRights = async param =>  {
+	console.log(">>> rescindDepositRights called")
+	const { channel } = this.state;
+	let assetId = channel.config.contractAddresses.Token
+	console.log(">>> rescindDepositRights assetId", assetId)
+	const rescindRes = await channel.rescindDepositRights({ AddressZero });
+	console.log(">>> rescindDepositRights res: ", rescindRes)
+  }
   // ************************************************* //
   //                    Pollers                        //
   // ************************************************* //
@@ -713,6 +732,35 @@ class App extends React.Component {
             />
             <Route path="/support" render={props => <SupportCard {...props} channel={channel} />} />
             <Confirmations machine={machine} network={network} state={state} />
+			<Button
+				disableTouchRipple
+				className={classes.button}
+				disabled={ false }
+				fullWidth
+				onClick={() => {
+					this.requestDepositRights();
+				}}
+				size="large"
+				variant="contained"
+				>
+				{ `Request Deposit Rights (Lock)`}
+			</Button>
+			<br/>
+			<br/>
+			<br/>
+			<Button
+				disableTouchRipple
+				className={classes.button}
+				disabled={ false }
+				fullWidth
+				onClick={() => {
+					this.rescindDepositRights();
+				}}
+				size="large"
+				variant="contained"
+				>
+				{ `Rescind Deposit Rights (Unlock)`}
+			</Button>
           </Paper>
         </Grid>
       </Router>
