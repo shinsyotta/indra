@@ -23,6 +23,7 @@ import { sendMachine } from "../state";
 
 import { Copyable } from "./copyable";
 import { usePublicIdentifier, PublicIdentifierInput } from "./input";
+import { parseUnits } from "ethers/utils";
 
 const LINK_LIMIT = Currency.DAI("10"); // $10 capped linked payments
 
@@ -105,7 +106,7 @@ export const SendCard = style(
         try {
           transferRes = await channel.conditionalTransfer({
             assetId: token.address,
-            amount: amount.value.wad.toString(),
+            amount: parseUnits(`${amount.value.wad}`,9).toString(),
             conditionType: ConditionalTransferTypes.LinkedTransfer,
             paymentId: getRandomBytes32(),
             preImage: getRandomBytes32(),
@@ -138,7 +139,7 @@ export const SendCard = style(
         console.log(`Creating ${amount.value.format()} link payment`);
         const link = await channel.conditionalTransfer({
           assetId: token.address,
-          amount: amount.value.wad.toString(),
+          amount: parseUnits(`${amount.value.wad}`, 9).toString(),
           conditionType: ConditionalTransferTypes.LinkedTransfer,
           paymentId: getRandomBytes32(),
           preImage: getRandomBytes32(),

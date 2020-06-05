@@ -4,7 +4,7 @@ import { Injectable, OnModuleInit } from "@nestjs/common";
 import { Wallet } from "ethers";
 import { AddressZero, Zero } from "ethers/constants";
 import { JsonRpcProvider } from "ethers/providers";
-import { getAddress, Network as EthNetwork, parseEther } from "ethers/utils";
+import { getAddress, Network as EthNetwork, parseEther, parseUnits } from "ethers/utils";
 import { Memoize } from "typescript-memoize";
 
 import { RebalanceProfile } from "../rebalanceProfile/rebalanceProfile.entity";
@@ -252,21 +252,23 @@ export class ConfigService implements OnModuleInit {
     assetId: string = AddressZero,
   ): Promise<RebalanceProfile | undefined> {
     if (assetId === AddressZero) {
+	  console.log("getDefaultRebalanceProfile: AddressZero")
       return {
         assetId: AddressZero,
         channels: [],
         id: 0,
-        collateralizeThreshold: parseEther(`0.05`),
-        target: parseEther(`0.1`),
+        collateralizeThreshold: parseUnits(`0.05`,9),
+        target: parseUnits(`0.1`,9) ,
         reclaimThreshold: Zero,
       };
     }
+	console.log("getDefaultRebalanceProfile: ELSE")
     return {
       assetId,
       channels: [],
       id: 0,
-      collateralizeThreshold: parseEther(`5`),
-      target: parseEther(`20`),
+      collateralizeThreshold: parseUnits(`5`,9),
+      target: parseUnits(`20`,9),
       reclaimThreshold: Zero,
     };
   }

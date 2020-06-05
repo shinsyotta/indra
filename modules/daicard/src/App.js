@@ -6,7 +6,7 @@ import WalletConnectChannelProvider from "@walletconnect/channel-provider";
 import { Paper, withStyles, Grid } from "@material-ui/core";
 import { Contract, ethers as eth } from "ethers";
 import { AddressZero, Zero } from "ethers/constants";
-import { formatEther } from "ethers/utils";
+import { formatEther, parseUnits } from "ethers/utils";
 import interval from "interval-promise";
 import { PisaClient } from "pisa-client";
 import React from "react";
@@ -455,7 +455,7 @@ class App extends React.Component {
           balance.onChain.token.wad,
         ]);
         const depositParams = {
-          amount: amount.toString(),
+          amount: parseUnits(`${amount}`, 9).toString(),
           assetId: token.address,
         };
         console.log(
@@ -487,7 +487,9 @@ class App extends React.Component {
 
       const amount = minBN([balance.onChain.ether.wad.sub(minDeposit.wad), nowMaxDeposit]);
       console.log(`Depositing ${amount} wei into channel: ${channel.multisigAddress}`);
-      const result = await channel.deposit({ amount: amount.toString(), assetId: AddressZero });
+      const result = await channel.deposit({
+		  amount: parseUnits(`${amount}`, 9).toString(),
+		  assetId: AddressZero });
       await this.refreshBalances();
       console.log(`Successfully deposited ether! Result: ${JSON.stringify(result, null, 2)}`);
 
