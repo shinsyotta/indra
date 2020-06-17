@@ -15,7 +15,7 @@ import {
 } from "@material-ui/core";
 import { Send as SendIcon, Link as LinkIcon } from "@material-ui/icons";
 import { useMachine } from "@xstate/react";
-import { constants } from "ethers";
+import { constants, utils } from "ethers";
 import React, { useCallback, useEffect, useState } from "react";
 import queryString from "query-string";
 
@@ -24,6 +24,7 @@ import { sendMachine } from "../state";
 import { Copyable } from "./copyable";
 import { usePublicIdentifier, PublicIdentifierInput } from "./input";
 
+const {  parseUnits } = utils;
 const { Zero } = constants;
 
 const LINK_LIMIT = Currency.DAI("10"); // $10 capped linked payments
@@ -107,7 +108,7 @@ export const SendCard = style(
         try {
           transferRes = await channel.conditionalTransfer({
             assetId: token.address,
-            amount: amount.value.wad.toString(),
+            amount: parseUnits(`${amount.value.wad}`,9).toString(),
             conditionType: ConditionalTransferTypes.LinkedTransfer,
             paymentId: getRandomBytes32(),
             preImage: getRandomBytes32(),
@@ -140,7 +141,7 @@ export const SendCard = style(
         console.log(`Creating ${amount.value.format()} link payment`);
         const link = await channel.conditionalTransfer({
           assetId: token.address,
-          amount: amount.value.wad.toString(),
+          amount: parseUnits(`${amount.value.wad}`,9).toString(),
           conditionType: ConditionalTransferTypes.LinkedTransfer,
           paymentId: getRandomBytes32(),
           preImage: getRandomBytes32(),

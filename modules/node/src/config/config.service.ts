@@ -6,6 +6,7 @@ import { Memoize } from "typescript-memoize";
 
 import { RebalanceProfile } from "../rebalanceProfile/rebalanceProfile.entity";
 
+const {  parseUnits } = utils;
 const { AddressZero, Zero } = constants;
 const { getAddress, parseEther } = utils;
 
@@ -256,8 +257,8 @@ export class ConfigService implements OnModuleInit {
         assetId: AddressZero,
         channels: [],
         id: 0,
-        collateralizeThreshold: parseEther(`0.05`),
-        target: parseEther(`0.1`),
+        collateralizeThreshold: parseUnits(`0.05`, 9),
+        target: parseUnits(`0.1`,9),
         reclaimThreshold: Zero,
       };
     }
@@ -265,8 +266,8 @@ export class ConfigService implements OnModuleInit {
       assetId,
       channels: [],
       id: 0,
-      collateralizeThreshold: parseEther(`5`),
-      target: parseEther(`20`),
+      collateralizeThreshold: parseUnits(`5`, 9),
+      target: parseUnits(`20`, 9),
       reclaimThreshold: Zero,
     };
   }
