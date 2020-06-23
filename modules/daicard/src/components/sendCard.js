@@ -15,7 +15,7 @@ import {
 } from "@material-ui/core";
 import { Send as SendIcon, Link as LinkIcon } from "@material-ui/icons";
 import { useMachine } from "@xstate/react";
-import { constants } from "ethers";
+import { constants, utils } from "ethers";
 import React, { useCallback, useEffect, useState } from "react";
 import queryString from "query-string";
 
@@ -25,6 +25,7 @@ import { Copyable } from "./copyable";
 import { usePublicIdentifier, PublicIdentifierInput } from "./input";
 
 const { Zero } = constants;
+const { parseUnits, formatEther } = utils;
 
 const LINK_LIMIT = Currency.DAI("10"); // $10 capped linked payments
 
@@ -70,17 +71,17 @@ export const SendCard = style(
         }
         if (!error) {
           try {
-            value = Currency.DAI(rawValue);
+            value = rawValue; //Currency.DAI(rawValue);
           } catch (e) {
             error = `Please enter a valid amount`;
           }
         }
-        if (!error && value && value.wad.gt(tokenBalance)) {
-          error = `Invalid amount: must be less than your balance`;
+        /*if (!error && value && value.wad.gt(tokenBalance)) {
+          //error = `Invalid amount: must be less than your balance`;
         }
         if (!error && value && value.wad.lte(Zero)) {
-          error = "Invalid amount: must be greater than 0";
-        }
+          //error = "Invalid amount: must be greater than 0";
+	    }*/
         setAmount({
           display: rawValue,
           error,
@@ -98,6 +99,7 @@ export const SendCard = style(
       }
       console.log(`Sending ${amount.value} to ${recipient.value}`);
       paymentAction("NEW_P2P");
+	  console.log(">>> parseUnits:", parseUnits(amount.value, 9).toString())
       // there is a chance the payment will fail when it is first sent
       // due to lack of collateral. collateral will be auto-triggered on the
       // hub side. retry for 1min, then fail
@@ -107,7 +109,7 @@ export const SendCard = style(
         try {
           transferRes = await channel.conditionalTransfer({
             assetId: token.address,
-            amount: amount.value.wad.toString(),
+            amount: parseUnits(amount.value, 9).toString(), //amount.value.wad.toString(),
             conditionType: ConditionalTransferTypes.LinkedTransfer,
             paymentId: getRandomBytes32(),
             preImage: getRandomBytes32(),

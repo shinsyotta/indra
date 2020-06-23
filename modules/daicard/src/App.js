@@ -54,7 +54,7 @@ const DEPOSIT_ESTIMATED_GAS = toBN("25000");
 const MAX_CHANNEL_VALUE = Currency.DAI("30");
 
 // change to use token with custom decimals
-export const TOKEN_DECIMALS = 18;
+export const TOKEN_DECIMALS = 9;
 
 const style = withStyles((theme) => ({
   paper: {
@@ -359,8 +359,11 @@ class App extends React.Component {
   getChannelBalances = async () => {
     const { balance, channel, swapRate, token } = this.state;
     const getTotal = (ether, token) => Currency.WEI(ether.wad.add(token.toETH().wad), swapRate);
+
+	//real balances
     const freeEtherBalance = await channel.getFreeBalance();
     const freeTokenBalance = await channel.getFreeBalance(token.address);
+ 
     balance.onChain.ether = Currency.WEI(
       await ethProvider.getBalance(channel.signerAddress),
       swapRate,
@@ -575,6 +578,13 @@ class App extends React.Component {
     } = this.state;
     const address = wallet ? wallet.address : channel ? channel.signerAddress : AddressZero;
     const { classes } = this.props;
+
+	var onChannel = `${balance.channel.token
+			.toGWEI(swapRate)
+			.format({ decimals: 2, symbol: false, round: false })}`
+	console.log(">>> swapRate:", swapRate)
+	console.log(">>>> onChannel:", onChannel)
+
     return (
       <Router>
         <Grid className={classes.app}>

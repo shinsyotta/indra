@@ -3,7 +3,6 @@ import { BigNumber, constants, utils } from "ethers";
 const { EtherSymbol } = constants;
 const { commify, parseUnits, formatUnits } = utils;
 
-export const TOKEN_DECIMALS = 18; // TODO: confing or retreive from ERC-20 token
 export class Currency {
   ////////////////////////////////////////
   // Static Properties/Methods
@@ -130,7 +129,7 @@ export class Currency {
     // Note: rounding n=1099.9 to nearest int is same as floor(n + 0.5)
     // roundUp plays same role as 0.5 in above example
     if (typeof decimals === "number" && decimals < nDecimals) {
-      const roundUp = BigNumber.from(`5${"0".repeat(TOKEN_DECIMALS - decimals - 1)}`);
+      const roundUp = BigNumber.from(`5${"0".repeat(18 - decimals - 1)}`);
       const rounded = this.fromWad(this.wad.add(roundUp));
       return rounded.slice(0, amt.length - (nDecimals - decimals)).replace(/\.$/, "");
     }
@@ -193,11 +192,11 @@ export class Currency {
 
   public _floor = (decStr: any) => decStr.substring(0, decStr.indexOf("."));
 
-  public toWad = (n: any) => parseUnits(n.toString(), TOKEN_DECIMALS);
+  public toWad = (n: any) => parseUnits(n.toString(), 18);
 
   public toRay = (n: any) => this.toWad(this.toWad(n.toString()));
 
-  public fromWad = (n: any) => formatUnits(n.toString(), TOKEN_DECIMALS);
+  public fromWad = (n: any) => formatUnits(n.toString(), 18);
 
   public fromRoundRay = (n: any) => this._round(this.fromRay(n));
 
