@@ -5,7 +5,7 @@ import { ConnextClientStorePrefix, EventNames } from "@connext/types";
 import { Currency, minBN, toBN, tokenToWei, weiToToken } from "@connext/utils";
 import WalletConnectChannelProvider from "@walletconnect/channel-provider";
 import { Paper, withStyles, Grid } from "@material-ui/core";
-import { Contract, Wallet, providers, constants, utils } from "ethers";
+import { BigNumber, Contract, Wallet, providers, constants, utils } from "ethers";
 import interval from "interval-promise";
 import React from "react";
 import { BrowserRouter as Router, Route } from "react-router-dom";
@@ -29,9 +29,10 @@ import { SupportCard } from "./components/supportCard";
 import { WithdrawSaiDialog } from "./components/withdrawSai";
 import { rootMachine } from "./state";
 import { cleanWalletConnect, migrate, initWalletConnect } from "./utils";
+import { formatUnits } from "ethers/lib/utils";
 
 const { AddressZero, Zero } = constants;
-const { formatEther } = utils;
+const { formatEther, parseUnits } = utils;
 
 const urls = {
   ethProviderUrl:
@@ -363,19 +364,62 @@ class App extends React.Component {
 	//real balances
     const freeEtherBalance = await channel.getFreeBalance();
     const freeTokenBalance = await channel.getFreeBalance(token.address);
- 
+	//console.log(">>> freeEtherBalance:", freeEtherBalance)
+	//console.log(">>> freeTokenBalance:", freeTokenBalance)
+
     balance.onChain.ether = Currency.WEI(
       await ethProvider.getBalance(channel.signerAddress),
       swapRate,
     ).toETH();
+
     balance.onChain.token = Currency.DEI(
       await token.balanceOf(channel.signerAddress),
       swapRate,
-    ).toDAI();
+  	).toDAI();
+
+
     balance.onChain.total = getTotal(balance.onChain.ether, balance.onChain.token).toETH();
     balance.channel.ether = Currency.WEI(freeEtherBalance[channel.signerAddress], swapRate).toETH();
     balance.channel.token = Currency.DEI(freeTokenBalance[channel.signerAddress], swapRate).toDAI();
+	//balance.channel.token =  PitchCurrency.GWEI(freeTokenBalance[channel.signerAddress], swapRate).toGWEI();
     balance.channel.total = getTotal(balance.channel.ether, balance.channel.token).toETH();
+
+	console.log(">>> balance.channel.token:", balance.channel.token)
+
+	//===== custom conversion start ====
+
+	/*var pc = PitchCurrency.GWEI(freeTokenBalance[channel.signerAddress], swapRate)
+	console.log(">>> pc:", pc)
+
+
+	if (pc) {
+		// var test = pc.toDAI(); // get _hex issue
+		// console.log(">>> test:", test)
+		//
+		// var testBal = test
+		// 	.toGWEI(swapRate) // then
+		// 	.format({ decimals: 2, symbol: false, round: false })
+		// console.log(">>> testBal:", testBal)
+
+
+		var test = pc.toGWEI();
+		console.log(">>> test:", test)
+
+		var testBal = test
+			//.toGWEI(swapRate) // no need
+			.format({ decimals: 2, symbol: false, round: false })
+		console.log(">>> testBal:", testBal)
+
+	}*/
+	//===== custom conversion end ====
+
+	var bal = balance.channel.token
+			.toGWEI(swapRate)
+			.format({ decimals: 2, symbol: false, round: false })
+
+	console.log(">>> bal:", bal)
+
+
     const logIfNotZero = (wad, prefix) => {
       if (wad.isZero()) {
         return;
@@ -711,3 +755,117 @@ class App extends React.Component {
 }
 
 export default style(App);
+
+
+class PitchCurrency extends Currency {
+
+	static GWEI = (amount, daiRate) => new PitchCurrency("GWEI", amount, daiRate);
+
+	constructor(type, amount, daiRate) {
+		super(type, amount, daiRate)
+
+        this.type = type;
+        this.daiRate = typeof daiRate !== "undefined" ? daiRate : "1";
+        this.daiRateGiven = !!daiRate;
+      try {
+		console.log(">>>> constructor 1: ")
+        this.wad = this.toWad(amount._hex ? BigNumber.from(amount._hex) : amount);
+		console.log(">>>> constructor 2: ")
+        this.ray = this.toRay(amount._hex ? BigNumber.from(amount._hex) : amount);
+		console.log(">>>> constructor 3: ")
+      } catch (e) {
+		console.log(">>>> constructor error: ")
+        throw new Error(`Invalid currency amount (${amount}): ${e}`);
+	  }
+    }
+
+	// DAI => Token rate
+	// ETH => ETH rate
+	// DEI => ??  // decimals 0
+	// FIN => ??   // decimals 3
+	// GWEI => PITCH token rate
+	// WEI => WEI ?? // decimals 0
+	getRate = (currency) => {
+
+      const exchangeRates = {
+        DAI: this.toRay(this.daiRate),
+        // DEI: this.toRay(parseUnits(this.daiRate, 18).toString()),
+        // ETH: this.toRay("1"),
+        // FIN: this.toRay(parseUnits("1", 3).toString()),
+        GWEI: this.toRay(parseUnits("1", 9).toString()),
+        // WEI: this.toRay(parseUnits("1", 18).toString()),
+      };
+
+      if (
+        (this.isEthType() && this.isEthType(currency)) ||
+        (this.isTokenType() && this.isTokenType(currency))
+      ) {
+        return exchangeRates[currency];
+      }
+
+      if (!this.daiRateGiven) {
+        console.warn(`Provide DAI:ETH rate for accurate ${this.type} -> ${currency} conversions`);
+        console.warn(`Using default eth price of $${this.daiRate} (amount: ${this.amount})`);
+      }
+
+      return exchangeRates[currency];
+    };
+
+
+	_convert = (targetType, daiRate) => {
+	  console.log(">>>> _convert daiRate: ", daiRate)
+      if (daiRate) {
+        this.daiRate = daiRate;
+        this.daiRateGiven = true;
+      }
+
+	  const getRateRes = this.getRate(targetType)
+
+	  if (!getRateRes) return
+
+	  const toRayRes = this.toRay(getRateRes)
+	  if (!toRayRes) return
+
+      const thisToTargetRate = toRayRes.div(this.getRate(this.type));
+      const targetAmount = this.fromRay(this.fromRoundRay(this.ray.mul(thisToTargetRate)));
+
+      console.log(`Converted: ${this.amount} ${this.type} => ${targetAmount} ${targetType}`)
+      return new PitchCurrency(
+        targetType,
+        targetAmount.toString(),
+        this.daiRateGiven ? this.daiRate : undefined,
+      );
+    };
+
+	toDAI = (daiRate) => { return this._convert("DAI", daiRate)};
+    //toDEI = (daiRate) => { return this._convert("DEI", daiRate)};
+    //toETH = (daiRate) => { return this._convert("ETH", daiRate)};
+    //toFIN = (daiRate) => { return this._convert("FIN", daiRate)};
+    //toWEI = (daiRate) => { return this._convert("WEI", daiRate)};
+    toGWEI = (daiRate) => { return this._convert("GWEI", daiRate)};
+
+	toWad = (n) => {
+		console.log(">>> toWad:", n)
+		if(!n) { return }
+		return parseUnits(n.toString(), 9);
+	}
+
+    toRay = (n) => {
+		if(!n) {
+			return
+		}
+		const toRayRes = this.toWad(n.toString())
+		console.log(">>> toRay:", toRayRes)
+		return toRayRes //this.toWad(r);
+	}
+    fromWad = (n) => {
+		if(!n) { return }
+		console.log(">>> fromWad toString:", n.toString())
+		return formatUnits(n.toString(), 9);
+	}
+
+	toString() {
+	   if(!this.amount) { return }
+	   return this.amount.slice(0, this.amount.indexOf("."));
+    }
+}

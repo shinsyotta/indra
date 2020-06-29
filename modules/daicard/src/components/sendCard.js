@@ -413,7 +413,7 @@ const SendCardModal = ({ amount, classes, closeModal, history, link, paymentStat
             </DialogContentText>
             <DialogContentText variant="body1" style={{ color: "#0F1012" }}>
               Please try again in 30s and contact support if you continue to experience issues.
-              (Settings --> Support)
+              (Settings Support)
             </DialogContentText>
           </DialogContent>
         </Grid>
