@@ -49,9 +49,11 @@ export const CashoutCard = style(
     const [recipient, setRecipient] = useAddress(null, ethProvider);
 
     const cashoutTokens = async () => {
+		console.log(">>>> cashoutTokens")
       const value = recipient.value;
       if (!channel || !value) return;
       const total = balance.channel.total;
+	  console.log(">>>> cashoutTokens total:", total)
       if (total.wad.lte(Zero)) return;
       // Put lock on actions, no more autoswaps until we're done withdrawing
       machine.send("START_WITHDRAW");
@@ -122,7 +124,7 @@ export const CashoutCard = style(
             <Typography variant="h2">
               <span>
                 {balance.channel.token
-                  .toDAI(swapRate)
+                  //.toDAI(swapRate)
                   .format({ decimals: 2, symbol: false, round: false })}
               </span>
             </Typography>

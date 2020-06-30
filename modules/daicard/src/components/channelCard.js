@@ -53,7 +53,7 @@ export const ChannelCard = withStyles(styles)((props) => {
                   split(
                     TOKEN_DECIMALS === 18
                       ? balance.channel.token.toDAI(swapRate)
-                      : balance.channel.token.toGWEI(swapRate),
+                      : balance.channel.token //balance.channel.token.toGWEI(swapRate),
                   ).whole
                 }
               </span>

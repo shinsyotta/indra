@@ -31,7 +31,7 @@ import { cleanWalletConnect, migrate, initWalletConnect } from "./utils";
 import { formatUnits } from "ethers/lib/utils";
 
 const { AddressZero, Zero } = constants;
-const { formatEther, parseUnits } = utils;
+const { commify, formatEther, parseUnits } = utils;
 
 const urls = {
   ethProviderUrl:
@@ -361,6 +361,9 @@ class App extends React.Component {
     const getTotal = (ether, token) => Currency.WEI(ether.wad.add(token.toETH().wad), swapRate);
     const freeEtherBalance = await channel.getFreeBalance();
     const freeTokenBalance = await channel.getFreeBalance(token.address);
+	console.log("... freeEtherBalance:", freeEtherBalance)
+	console.log("... freeTokenBalance:", freeTokenBalance)
+
     balance.onChain.ether = Currency.WEI(
       await ethProvider.getBalance(channel.signerAddress),
       swapRate,
@@ -370,31 +373,41 @@ class App extends React.Component {
       swapRate,
     ).toDAI();
     balance.onChain.total = getTotal(balance.onChain.ether, balance.onChain.token).toETH();
+	//console.log("... balance.onChain.total:", balance.onChain.total)
     balance.channel.ether = Currency.WEI(freeEtherBalance[channel.signerAddress], swapRate).toETH();
-    balance.channel.token = Currency.DEI(freeTokenBalance[channel.signerAddress], swapRate).toDAI();
-	//balance.channel.token =  PitchCurrency.GWEI(freeTokenBalance[channel.signerAddress], swapRate).toGWEI();
+    //balance.channel.token = Currency.DEI(freeTokenBalance[channel.signerAddress], swapRate).toDAI();
+ 	balance.channel.token = PitchCurrency.GDEI(freeTokenBalance[channel.signerAddress], swapRate).toGWEI();
     balance.channel.total = getTotal(balance.channel.ether, balance.channel.token).toETH();
+	//console.log("... balance.channel.total:", balance.channel.total)
 
 	//===== custom conversion start ====
 
-	var pc = PitchCurrency.GWEI(freeTokenBalance[channel.signerAddress], swapRate)
+	/*var pc = PitchCurrency.GDEI(freeTokenBalance[channel.signerAddress], swapRate)
 	console.log(">>> pc:", pc)
 	if (pc) {
-		var test = pc.toDAI(); // get _hex issue
-		console.log(">>> test:", test) // get 30
-
-		// var testBal = test
+		// var testDai = pc.toDAI(); // get _hex issue
+		// console.log(">>> test toDAI:", testDai) // get 30
+		//
+		// var testBal = testDai
 		// 	.toGWEI(swapRate) // then
 		// 	.format({ decimals: 2, symbol: false, round: false })
 		// console.log(">>> testBal:", testBal)
 
-		var test = pc.toGWEI();
-		console.log(">>> test:", test)
-		var testBal = test
+		// works !!!
+		// var test = pc.toGWEI()
+		// var testBal = test
+		// 	//.toGWEI(swapRate) // no need
+		// 	.format({ decimals: 2, symbol: false, round: false })
+		// console.log(">>> testBal:", testBal)
+
+		// works !!!
+		var testETH = pc.toETH()
+		console.log(">> testETH:", testETH)
+		var testBalETH = testETH
 			//.toGWEI(swapRate) // no need
 			.format({ decimals: 2, symbol: false, round: false })
-		console.log(">>> testBal:", testBal) // get 0.00
-	}
+		console.log(">>> testBalETH:", testBalETH)
+	}*/
 	//===== custom conversion end ====
 
     const logIfNotZero = (wad, prefix) => {
@@ -601,7 +614,7 @@ class App extends React.Component {
     const { classes } = this.props;
 
 	var onChannel = `${balance.channel.token
-		.toGWEI(swapRate)
+		//.toGWEI(swapRate)
 		.format({ decimals: 2, symbol: false, round: false })}`
 	console.log(">>> swapRate:", swapRate)
 	console.log(">>>> onChannel:", onChannel)
@@ -736,7 +749,13 @@ export default style(App);
 
 class PitchCurrency extends Currency {
 
-	static GWEI = (amount, daiRate) => new PitchCurrency("GWEI", amount, daiRate);
+	static GDEI = (amount, daiRate) => new PitchCurrency("GDEI", amount, daiRate);
+
+	defaultOptions = {
+	  GDEI: { commas: false, decimals: 0, symbol: false, round: true },
+      GWEI: { commas: false, decimals: 2, symbol: true, round: true },
+	  ETH: { commas: false, decimals: 3, symbol: true, round: true },
+    };
 
 	constructor(type, amount, daiRate) {
 		super(type, amount, daiRate)
@@ -745,31 +764,22 @@ class PitchCurrency extends Currency {
         this.daiRate = typeof daiRate !== "undefined" ? daiRate : "1";
         this.daiRateGiven = !!daiRate;
       try {
-		console.log(">>>> constructor 1: ")
         this.wad = this.toWad(amount._hex ? BigNumber.from(amount._hex) : amount);
-		console.log(">>>> constructor 2: ")
         this.ray = this.toRay(amount._hex ? BigNumber.from(amount._hex) : amount);
-		console.log(">>>> constructor 3: ")
       } catch (e) {
-		console.log(">>>> constructor error: ")
         throw new Error(`Invalid currency amount (${amount}): ${e}`);
 	  }
     }
 
-	// DAI => Token rate
-	// ETH => ETH rate
-	// DEI => ??  // decimals 0
-	// FIN => ??   // decimals 3
-	// GWEI => PITCH token rate
-	// WEI => WEI ?? // decimals 0
 	getRate = (currency) => {
-
+	  //console.log(">>> getRate: ", currency)
+	  //console.log(">>> getRate daiRate: ", this.daiRate)
       const exchangeRates = {
-        DAI: this.toRay(this.daiRate),
-        // DEI: this.toRay(parseUnits(this.daiRate, 18).toString()),
-        // ETH: this.toRay("1"),
+        //DAI: this.toRay(this.daiRate),
+        GDEI: this.toRay(parseUnits(this.daiRate, 9).toString()),
+        ETH: this.toRay(parseUnits("1", 9).toString()), //this.toRay(parseUnits(this.daiRate, 9).toString()), //this.toRay("1"),
         // FIN: this.toRay(parseUnits("1", 3).toString()),
-        GWEI: this.toRay(parseUnits("1", 9).toString()),
+        GWEI: this.toRay(parseUnits(this.daiRate, 9).toString()), // TODO: this.daiRate
         // WEI: this.toRay(parseUnits("1", 18).toString()),
       };
 
@@ -790,21 +800,32 @@ class PitchCurrency extends Currency {
 
 
 	_convert = (targetType, daiRate) => {
-	  console.log(">>>> _convert daiRate: ", daiRate)
       if (daiRate) {
         this.daiRate = daiRate;
         this.daiRateGiven = true;
       }
 
-	  const getRateRes = this.getRate(targetType)
+	  const getTargetRateRes = this.getRate(targetType)
+	  //console.log("======= getTargetRateRes: ", getTargetRateRes)
+	  if (!getTargetRateRes) return
 
-	  if (!getRateRes) return
+	  const toRayTargetRateRes = this.toRay(getTargetRateRes)
+	  if (!toRayTargetRateRes) return
+	  //console.log("======= toRayRes: ", toRayTargetRateRes)
 
-	  const toRayRes = this.toRay(getRateRes)
-	  if (!toRayRes) return
+	  const getThisRateRes = this.getRate(this.type)
+	  //console.log("======= getThisRateRes: ", getThisRateRes)
+      const thisToTargetRate = toRayTargetRateRes.div(getThisRateRes);
+	  //console.log("======= thisToTargetRate: ", thisToTargetRate) //1 000 000 000
 
-      const thisToTargetRate = toRayRes.div(this.getRate(this.type));
-      const targetAmount = this.fromRay(this.fromRoundRay(this.ray.mul(thisToTargetRate)));
+	  var mul = this.ray.mul(thisToTargetRate)
+	  //console.log("======= mul: ", mul)
+
+	  //var fromRoundRay = this.fromRoundRay(mul)
+	  var fromRoundRay = parseUnits(this.fromRoundRay(mul), 9) //TODO: here was changes
+	  //console.log("======= fromRoundRay: ", fromRoundRay)
+      const targetAmount = this.fromRay(fromRoundRay);
+	  //console.log("======= targetAmount: ", targetAmount)
 
       console.log(`Converted: ${this.amount} ${this.type} => ${targetAmount} ${targetType}`)
       return new PitchCurrency(
@@ -814,15 +835,53 @@ class PitchCurrency extends Currency {
       );
     };
 
+	format(_options) {
+	  const amt = this.amount;
+	  const options = {
+		...this.defaultOptions[this.type],
+		...(_options || {}),
+	  };
+	  const symbol = options.symbol ? `${this.symbol}` : "";
+	  const nDecimals = amt.length - amt.indexOf(".") - 1;
+
+	  const amount = options.round
+		? this.round(options.decimals) //no
+		: options.decimals > nDecimals // here -> no
+		? amt + "0".repeat(options.decimals - nDecimals)
+		: options.decimals < nDecimals // here
+		? amt.substring(0, amt.indexOf(".") + options.decimals + 1)
+		: amt;
+	  //console.log(">>> amount:", amount)
+	  return `${symbol}${options.commas ? commify(amount) : amount}`;
+	}
+
+	round(decimals) {
+	  const amt = this.amount;
+	  const nDecimals = amt.length - amt.indexOf(".") - 1;
+	  // rounding to more decimals than are available: pad with zeros
+	  if (typeof decimals === "number" && decimals > nDecimals) {
+		return amt + "0".repeat(decimals - nDecimals);
+	  }
+	  // rounding to fewer decimals than are available: round
+	  // Note: rounding n=1099.9 to nearest int is same as floor(n + 0.5)
+	  // roundUp plays same role as 0.5 in above example
+	  if (typeof decimals === "number" && decimals < nDecimals) {
+		const roundUp = BigNumber.from(`5${"0".repeat(9 - decimals - 1)}`);
+		const rounded = this.fromWad(this.wad.add(roundUp));
+		return rounded.slice(0, amt.length - (nDecimals - decimals)).replace(/\.$/, "");
+	  }
+	  // rounding to same decimals as are available: return amount w no changes
+	  return this.amount;
+	}
+
 	toDAI = (daiRate) => { return this._convert("DAI", daiRate)};
     //toDEI = (daiRate) => { return this._convert("DEI", daiRate)};
-    //toETH = (daiRate) => { return this._convert("ETH", daiRate)};
+    toETH = (daiRate) => { return this._convert("ETH", daiRate)};
     //toFIN = (daiRate) => { return this._convert("FIN", daiRate)};
     //toWEI = (daiRate) => { return this._convert("WEI", daiRate)};
-    toGWEI = (daiRate) => { return this._convert("GWEI", daiRate)};
+    toGWEI = (daiRate) => { return this._convert("GWEI", daiRate) };
 
 	toWad = (n) => {
-		console.log(">>> toWad:", n)
 		if(!n) { return }
 		return parseUnits(n.toString(), 9);
 	}
@@ -832,13 +891,31 @@ class PitchCurrency extends Currency {
 			return
 		}
 		const toRayRes = this.toWad(n.toString())
-		console.log(">>> toRay:", toRayRes)
-		return toRayRes //this.toWad(r);
+		return toRayRes
 	}
     fromWad = (n) => {
 		if(!n) { return }
-		console.log(">>> fromWad toString:", n.toString())
 		return formatUnits(n.toString(), 9);
+	}
+
+	fromRoundRay = (n) => {
+		return this._round(this.fromRay(n));
+	}
+
+    fromRay = (n) => {
+		var fromWad = this.fromWad(n.toString())
+		var round = this._round(fromWad)
+		var fromWadRes = this.fromWad(round);
+
+		return fromWadRes
+	}
+
+	_round = (decStr) => {
+      return this._floor(this.fromWad(this.toWad(decStr).add(this.toWad("0.5"))).toString());
+  	}
+
+	_floor = (decStr) => {
+		return decStr.substring(0, decStr.indexOf("."));
 	}
 
 	toString() {
