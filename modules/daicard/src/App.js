@@ -358,7 +358,20 @@ class App extends React.Component {
 
   getChannelBalances = async () => {
     const { balance, channel, swapRate, token } = this.state;
-    const getTotal = (ether, token) => Currency.WEI(ether.wad.add(token.toETH().wad), swapRate);
+
+
+	//Probably need to re-write
+    const getTotal = (ether, token) => {
+		console.log(">>> getTotal ether: ", ether)
+		console.log(">>> getTotal token: ", token)
+		console.log(">>> token.toETH()", token.toETH())
+
+		var res = Currency.WEI(ether.wad.add(token.toETH().wad), swapRate);
+		console.log(">>> getTotal res: ", res.toETH())
+		return res
+	}
+
+	// Initial point with actual balances
     const freeEtherBalance = await channel.getFreeBalance();
     const freeTokenBalance = await channel.getFreeBalance(token.address);
 	console.log("... freeEtherBalance:", freeEtherBalance)
@@ -374,11 +387,16 @@ class App extends React.Component {
     ).toDAI();
     balance.onChain.total = getTotal(balance.onChain.ether, balance.onChain.token).toETH();
 	//console.log("... balance.onChain.total:", balance.onChain.total)
+
+
     balance.channel.ether = Currency.WEI(freeEtherBalance[channel.signerAddress], swapRate).toETH();
+	//balance.channel.ether = PitchCurrency.GDEI(freeEtherBalance[channel.signerAddress], swapRate)//.toETH();
     //balance.channel.token = Currency.DEI(freeTokenBalance[channel.signerAddress], swapRate).toDAI();
- 	balance.channel.token = PitchCurrency.GDEI(freeTokenBalance[channel.signerAddress], swapRate).toGWEI();
-    balance.channel.total = getTotal(balance.channel.ether, balance.channel.token).toETH();
-	//console.log("... balance.channel.total:", balance.channel.total)
+	var channelToken = PitchCurrency.GDEI(freeTokenBalance[channel.signerAddress], swapRate)
+ 	balance.channel.token = channelToken.toGWEI();
+    balance.channel.total = getTotal(balance.channel.ether, channelToken).toETH();
+	//toETH() was removed when withdraw worked
+	console.log("... balance.channel.total:", balance.channel.total)
 
 	//===== custom conversion start ====
 
@@ -749,6 +767,7 @@ export default style(App);
 
 class PitchCurrency extends Currency {
 
+	//static GWEI = (amount, daiRate) => new PitchCurrency("GWEI", amount, daiRate);
 	static GDEI = (amount, daiRate) => new PitchCurrency("GDEI", amount, daiRate);
 
 	defaultOptions = {
@@ -851,7 +870,7 @@ class PitchCurrency extends Currency {
 		: options.decimals < nDecimals // here
 		? amt.substring(0, amt.indexOf(".") + options.decimals + 1)
 		: amt;
-	  //console.log(">>> amount:", amount)
+	  console.log(">>> amount:", amount)
 	  return `${symbol}${options.commas ? commify(amount) : amount}`;
 	}
 

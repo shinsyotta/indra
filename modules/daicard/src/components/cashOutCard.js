@@ -1,7 +1,7 @@
 import { inverse } from "@connext/utils";
 import { Button, CircularProgress, Grid, Typography, withStyles } from "@material-ui/core";
 import { Unarchive as UnarchiveIcon } from "@material-ui/icons";
-import { constants } from "ethers";
+import { constants, utils } from "ethers";
 import React, { useState } from "react";
 
 import EthIcon from "../assets/Eth.svg";
@@ -10,6 +10,7 @@ import DaiIcon from "../assets/dai.svg";
 import { useAddress, AddressInput } from "./input";
 
 const { AddressZero, Zero } = constants;
+const { parseUnits, formatEther, formatUnits } = utils;
 
 const style = withStyles((theme) => ({
   icon: {
@@ -74,11 +75,15 @@ export const CashoutCard = style(
       const value = recipient.value;
       if (!channel || !value) return;
       const total = balance.channel.total;
+	  console.log(">>>> cashoutEther total:", total)
       if (total.wad.lte(Zero)) return;
       // Put lock on actions, no more autoswaps until we're done withdrawing
       machine.send("START_WITHDRAW");
       setWithdrawing(true);
+	  console.log(`Withdrawing ETH: ${total}`);
       console.log(`Withdrawing ${total.toETH().format()} to: ${value}`);
+	  console.log(">>> balance.channel.token.wad:", balance.channel.token.wad)
+	  //console.log(">>> parseUnits:", formatUnits(total.toETH(), 9))
       // swap all in-channel tokens for eth
       if (balance.channel.token.wad.gt(Zero)) {
         await channel.swap({
@@ -124,7 +129,7 @@ export const CashoutCard = style(
             <Typography variant="h2">
               <span>
                 {balance.channel.token
-                  //.toDAI(swapRate)
+                  //.toGWEI()
                   .format({ decimals: 2, symbol: false, round: false })}
               </span>
             </Typography>
