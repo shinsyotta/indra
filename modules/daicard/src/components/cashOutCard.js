@@ -81,19 +81,27 @@ export const CashoutCard = style(
       machine.send("START_WITHDRAW");
       setWithdrawing(true);
 	  console.log(`Withdrawing ETH: ${total}`);
-      console.log(`Withdrawing ${total.toETH().format()} to: ${value}`);
+	  console.log(`Withdrawing ${total.format()} to: ${value}`);
+      //console.log(`Withdrawing ${total.toETH().format()} to: ${value}`);
 	  console.log(">>> balance.channel.token.wad:", balance.channel.token.wad)
+	  console.log(">>> balance.channel.token.wad toGWEI:", balance.channel.token.toGWEI().wad)
+
+	  console.log(">>> balance.channel.ether:", balance.channel.ether)
+
+
+	  console.log(">>> inverse(swapRate):", inverse(swapRate))
 	  //console.log(">>> parseUnits:", formatUnits(total.toETH(), 9))
       // swap all in-channel tokens for eth
       if (balance.channel.token.wad.gt(Zero)) {
         await channel.swap({
-          amount: balance.channel.token.wad,
+          amount: balance.channel.token.wad,//"29965000000",//balance.channel.token.toGWEI().wad, //balance.channel.token.wad,
           fromAssetId: token.address,
           swapRate: inverse(swapRate),
           toAssetId: AddressZero,
         });
         await refreshBalances();
       }
+	  console.log(">>> here >>>:")
       const result = await channel.withdraw({
         amount: balance.channel.ether.wad.toString(),
         assetId: AddressZero,

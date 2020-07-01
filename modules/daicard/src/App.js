@@ -366,8 +366,11 @@ class App extends React.Component {
 		console.log(">>> getTotal token: ", token)
 		console.log(">>> token.toETH()", token.toETH())
 
-		var res = Currency.WEI(ether.wad.add(token.toETH().wad), swapRate);
-		console.log(">>> getTotal res: ", res.toETH())
+		// TODO: here
+		//var res = Currency.WEI(ether.wad.add(token.toETH().wad), swapRate);
+		var res = PitchCurrency.GDEI(ether.wad.add(token.toETH().wad));
+		console.log(">>> getTotal res: ", res)
+		console.log(">>> getTotal res ETH: ", res.toETH())// 0.29
 		return res
 	}
 
@@ -390,12 +393,12 @@ class App extends React.Component {
 
 
     balance.channel.ether = Currency.WEI(freeEtherBalance[channel.signerAddress], swapRate).toETH();
-	//balance.channel.ether = PitchCurrency.GDEI(freeEtherBalance[channel.signerAddress], swapRate)//.toETH();
+	//balance.channel.ether = PitchCurrency.GDEI(freeEtherBalance[channel.signerAddress], swapRate).toETH();
     //balance.channel.token = Currency.DEI(freeTokenBalance[channel.signerAddress], swapRate).toDAI();
 	var channelToken = PitchCurrency.GDEI(freeTokenBalance[channel.signerAddress], swapRate)
  	balance.channel.token = channelToken.toGWEI();
     balance.channel.total = getTotal(balance.channel.ether, channelToken).toETH();
-	//toETH() was removed when withdraw worked
+	console.log("... balance.channel.ether:", balance.channel.ether)
 	console.log("... balance.channel.total:", balance.channel.total)
 
 	//===== custom conversion start ====
