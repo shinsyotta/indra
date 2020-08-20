@@ -1,0 +1,1 @@
+cat /etc/path/privkey.pem /etc/path/fullchain.pem  > node_modules/webpack-dev-server/ssl/server.pem
