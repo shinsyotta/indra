@@ -15,8 +15,7 @@
   },
   "homepage": "https://github.com/ConnextProject/indra#readme",
   "scripts": {
-    "lint": "bash ops/lint.sh",
-    "prestart": "./makecert"
+    "lint": "bash ops/lint.sh"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "3.0.2",
