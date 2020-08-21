@@ -234,28 +234,7 @@
   },
   "4": {
     "Token": {
-      "address": "0x50C94BeCAd95bEe21aF226dc799365Ee6B134459",
-      "constructorArgs": [
-        {
-          "name": "symbol",
-          "value": "CXT"
-        },
-        {
-          "name": "name",
-          "value": "ConnextToken"
-        },
-        {
-          "name": "version",
-          "value": "1.0"
-        },
-        {
-          "name": "chainId",
-          "value": "4"
-        }
-      ],
-      "creationCodeHash": "0xa97c8e987f37ee4c25b13296adac55bafc9f6e5bb3fd6e89f13ba5df24cbdb95",
-      "runtimeCodeHash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
-      "txHash": "0x86d45f6fa055902f8345b9ecf424d282d3ac2874640dda18673776d75bdcc601"
+      "address": "0xEC69284538cbfDaf110E15750ac4dba318e98a75"
     },
     "SAIToken": {
       "address": "0xFab46E002BbF0b4509813474841E0716E6730136"
